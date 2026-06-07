@@ -12,10 +12,10 @@ API_HASH = os.environ.get("API_HASH", "")
 SESSION_STRING = os.environ.get("SESSION_STRING", "")
 
 # کانال مبدا (که می‌خوای از اون بخونی)
-SOURCE_CHANNEL = "@AdsVipz" # مثلاً @bbcpersian
+SOURCE_CHANNEL = "@alonews" # مثلاً @bbcpersian
 
 # کانال مقصد (کانال خودت)
-DEST_CHANNEL = "@testmaghsad83"   # مثلاً @my_channel
+DEST_CHANNEL = -1003792554304   # مثلاً @my_channel
 
 # فیلتر کلمات - پیام‌هایی که این کلمات رو دارن فوروارد نمیشن
 BLOCKED_WORDS = [
