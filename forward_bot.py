@@ -64,7 +64,7 @@ def should_forward(text):
 async def handler(event):
     try:
         message = event.message
-        text = message.text or message.caption or ""
+        text = getattr(message, 'text', '') or getattr(message, 'caption', '') or ""
 
         if should_forward(text):
             await client.forward_messages(DEST_CHANNEL, message)
