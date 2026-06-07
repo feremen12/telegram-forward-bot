@@ -13,7 +13,7 @@ SESSION_STRING = os.environ.get("SESSION_STRING", "")
 SOURCE_CHANNEL =  "@testforwarder83"  # مثلاً @bbcpersian
 
 # کانال مقصد (کانال خودت)
-DEST_CHANNEL =  "@testmaghsad83"  # مثلاً @my_channel
+DEST_CHANNEL =  "@Aadmintester83"  # مثلاً @my_channel
 
 # فیلتر کلمات - پیام‌هایی که این کلمات رو دارن فوروارد نمیشن
 BLOCKED_WORDS = [
