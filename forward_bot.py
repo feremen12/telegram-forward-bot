@@ -13,7 +13,7 @@ API_HASH = os.environ.get("API_HASH", "")
 SESSION_STRING = os.environ.get("SESSION_STRING", "")
 
 # کانال مبدا (که می‌خوای از اون بخونی)
-SOURCE_CHANNEL = "@FO_RK"   # مثلاً @bbcpersian یا ID عددی
+SOURCE_CHANNEL =  "@alonews"  # مثلاً @bbcpersian یا ID عددی
 
 # کانال مقصد (کانال خودت)
 DEST_CHANNEL = -1003792554304   # مثلاً @my_channel
