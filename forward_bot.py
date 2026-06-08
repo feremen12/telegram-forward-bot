@@ -5,7 +5,6 @@ from telethon.sessions import StringSession
 import asyncio
 import os
 from aiohttp import web
-from datetime import datetime, timezone
 
 # ========== تنظیمات ==========
 API_ID = int(os.environ.get("API_ID", "0"))
@@ -13,16 +12,19 @@ API_HASH = os.environ.get("API_HASH", "")
 SESSION_STRING = os.environ.get("SESSION_STRING", "")
 
 # کانال مبدا (که می‌خوای از اون بخونی)
-SOURCE_CHANNEL =  "@alonews"  # مثلاً @bbcpersian یا ID عددی
+SOURCE_CHANNEL = "@alonews"   # مثلاً @bbcpersian یا ID عددی
 
 # کانال مقصد (کانال خودت)
-DEST_CHANNEL = -1003792554304   # مثلاً @my_channel
+DEST_CHANNEL = -1003792554304       # مثلاً @my_channel
+
+# حداکثر حجم ویدیو برای فوروارد (بر اساس مگابایت)
+MAX_VIDEO_SIZE_MB = 5
 
 # فیلتر کلمات - پیام‌هایی که این کلمات رو دارن فوروارد نمیشن
 BLOCKED_WORDS = [
-    "تبلیغ",
-    "آگهی",
-    "خرید",
+    "تبلیغ", "vpn"
+    "آگهی", "bet"
+    "خرید", "بت" 
     "فروش",
 ]
 
@@ -41,7 +43,6 @@ client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH,
     app_version="1.0"
 )
 
-# آخرین ID پیامی که فوروارد شده
 last_message_id = 0
 
 def should_forward(text):
@@ -64,32 +65,54 @@ def should_forward(text):
 
     return True
 
+def is_video_allowed(message):
+    # اگه ویدیو نداره، مشکلی نیست
+    if not message.video and not message.document:
+        return True
+    
+    # چک حجم ویدیو
+    media = message.video or message.document
+    if media:
+        size_mb = media.size / (1024 * 1024)
+        if size_mb > MAX_VIDEO_SIZE_MB:
+            print(f"❌ ویدیو بلاک شد - حجم: {size_mb:.1f} MB (بیشتر از {MAX_VIDEO_SIZE_MB} MB)")
+            return False
+        else:
+            print(f"✅ ویدیو مجاز - حجم: {size_mb:.1f} MB")
+    
+    return True
+
 async def check_new_messages():
     global last_message_id
     try:
         messages = await client.get_messages(SOURCE_CHANNEL, limit=10)
-        
+
         if not messages:
             return
-            
-        # اولین بار که اجرا میشه، آخرین ID رو ذخیره کن
+
         if last_message_id == 0:
             last_message_id = messages[0].id
             print(f"✅ شروع از پیام ID: {last_message_id}")
             return
-        
-        # پیام‌های جدید رو پیدا کن
+
         new_messages = [m for m in messages if m.id > last_message_id]
-        
+
         if new_messages:
-            # از قدیمی به جدید فوروارد کن
             for message in reversed(new_messages):
                 text = getattr(message, 'text', '') or getattr(message, 'caption', '') or ""
-                if should_forward(text):
-                    await client.forward_messages(DEST_CHANNEL, message)
-                    print(f"✅ فوروارد شد: {text[:50]}...")
-                last_message_id = message.id
                 
+                if not should_forward(text):
+                    last_message_id = message.id
+                    continue
+                    
+                if not is_video_allowed(message):
+                    last_message_id = message.id
+                    continue
+                
+                await client.forward_messages(DEST_CHANNEL, message)
+                print(f"✅ فوروارد شد: {text[:50]}...")
+                last_message_id = message.id
+
     except Exception as e:
         print(f"خطا در چک کردن پیام‌ها: {e}")
 
@@ -99,7 +122,6 @@ async def polling_loop():
         await check_new_messages()
         await asyncio.sleep(CHECK_INTERVAL)
 
-# وب سرور کوچیک برای اینکه Railway نخوابه
 async def handle(request):
     return web.Response(text="Bot is running!")
 
@@ -118,10 +140,7 @@ async def main():
     await start_web_server()
     await client.start()
     print("متصل شد!")
-    
-    # هم listener و هم polling
     asyncio.create_task(polling_loop())
-    
     await client.run_until_disconnected()
 
 if __name__ == "__main__":
